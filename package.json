@@ -1,0 +1,50 @@
+{
+  "name": "native_plus_web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "prepare": "patch-package",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest",
+    "run-web": "./node_modules/.bin/webpack-dev-server -d --config ./web/webpack.config.js --inline --hot --colors",
+    "run-ios": "react-native run-ios",
+    "run-android": "react-native run-android"
+  },
+  "dependencies": {
+    "antd-mobile": "^2.1.8",
+    "art": "^0.10.2",
+    "babel-core": "^6.26.0",
+    "babel-plugin-react-native-web": "^0.4.0",
+    "file-loader": "^1.1.6",
+    "qs": "^6.5.2",
+    "react": "^16.2.0",
+    "react-art": "^16.3.2",
+    "react-dom": "^16.2.0",
+    "react-native": "^0.53.0",
+    "react-native-awesome-viewpager": "^1.0.5",
+    "react-native-datepicker": "^1.7.2",
+    "react-native-modal-datetime-picker": "^5.1.0",
+    "react-native-modal-selector": "^0.0.24",
+    "react-native-storage": "^0.2.2",
+    "react-native-web": "^0.6.1",
+    "react-navigation": "^1.0.3",
+    "react-scripts": "^1.0.8",
+    "rn-viewpager": "^1.2.9"
+  },
+  "devDependencies": {
+    "babel-jest": "22.2.2",
+    "babel-loader": "^7.1.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.3.0",
+    "patch-package": "^5.1.1",
+    "postinstall-prepare": "^1.0.1",
+    "react-test-renderer": "16.2.0",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.11.0",
+    "webpack-dev-server": "^2.11.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
