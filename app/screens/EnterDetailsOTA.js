@@ -21,7 +21,7 @@ export default class EnterDetailsOTA extends React.Component {
         super(props);
         const { params } = this.props.navigation.state;
         this.state = {
-            data: params.data.content.health_component,
+            data: params.data,
             childId: params.childId,
             height: null,
             weight: null,
@@ -42,8 +42,9 @@ export default class EnterDetailsOTA extends React.Component {
                 ),
             }).then((response) => response.json())
                 .then((responseJson) => {
+                    console.log("reponse in EnterDetailsOTA Updation is:", responseJson)
                     const {navigate} = this.props.navigation;
-                    navigate('Profile', {data: this.props.navigation.state.data, childId: this.props.navigation.state.childId})
+                    navigate('Profile', {data: this.props.navigation.state.data, childId: params.childId})
                     return responseJson;
                 })
                 .catch((error) => {
@@ -55,21 +56,21 @@ export default class EnterDetailsOTA extends React.Component {
     openMainPageWithoutDetailsUpload() {
         const {navigate} = this.props.navigation;
         const {params} = this.props.navigation.state;
-        navigate('Profile', {data: params.data, childId: params.childId})
+        navigate('Profile', {data: this.props.navigation.state.data, childId: params.childId})
     }
 
     render() {
-        console.log("data & childId:", this.state.data, this.state.childId, this.state.height, this.state.weight);
+        console.log("value of props in EnterDetailsOTA is:", this.state.data, this.state.childId)
         return(
             <View style={{alignItems: "center", justifyContent: "center", marginTop: 20}}>
-                <Text style={{color: "#797979", fontSize: 20}}>{this.state.data.title}</Text>
+                <Text style={{color: "#797979", fontSize: 20}}>{this.state.data.health_component.title}</Text>
                 <View style={{marginTop: 100}}>
                     <View style={{flexDirection: "row", justifyContent: "space-between"}}>
                         {Platform.OS === "web" ?
                             <ImageWeb defaultSource={require('../height.png')} style={{width: 20, height: 20}}/> :
                             <Image source={require('../height.png')} style={{width: 20, height: 20}}/>
                         }
-                        <Text style={{color: "#828282", fontSize: 20, marginLeft: 10}}>{this.state.data.component_list[0].title}</Text>
+                        <Text style={{color: "#828282", fontSize: 20, marginLeft: 10}}>{this.state.data.health_component.component_list[0].title}</Text>
                     </View>
                     <View style={{flexDirection: "row", marginTop: 30, justifyContent: "center"}}>
                         <TextInput
@@ -79,14 +80,14 @@ export default class EnterDetailsOTA extends React.Component {
                             autoCapitalize = "none"
                             onChangeText = {(text)=>this.setState({height: text})}
                         />
-                        <Text style={{textAlign: "center", color: "#828282"}}>{this.state.data.component_list[0].growth_unit}</Text>
+                        <Text style={{textAlign: "center", color: "#828282"}}>{this.state.data.health_component.component_list[0].growth_unit}</Text>
                     </View>
                     <View style={{flexDirection: "row", justifyContent: "space-between", marginTop: 30}}>
                         {Platform.OS === "web" ?
                             <ImageWeb defaultSource={require('../weight.png')} style={{width: 20, height: 20}}/> :
                             <Image source={require('../weight.png')} style={{width: 20, height: 20}}/>
                         }
-                        <Text style={{color: "#828282", fontSize: 20, marginLeft: 10}}>{this.state.data.component_list[1].title}</Text>
+                        <Text style={{color: "#828282", fontSize: 20, marginLeft: 10}}>{this.state.data.health_component.component_list[1].title}</Text>
                     </View>
                     <View style={{flexDirection: "row", marginTop: 30, justifyContent: "center"}}>
                         <TextInput
@@ -96,7 +97,7 @@ export default class EnterDetailsOTA extends React.Component {
                             autoCapitalize = "none"
                             onChangeText = {(text)=>this.setState({weight: text})}
                         />
-                        <Text style={{textAlign: "center", color: "#828282"}}>{this.state.data.component_list[1].growth_unit}</Text>
+                        <Text style={{textAlign: "center", color: "#828282"}}>{this.state.data.health_component.component_list[1].growth_unit}</Text>
                     </View>
                 </View>
                 <View style={{alignItems: "center", justifyContent: "center", marginTop: 130}}>

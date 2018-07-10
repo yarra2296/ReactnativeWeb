@@ -31,7 +31,7 @@ export default class ProfileViewer extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
         if (Platform.OS === 'web') {
             AsyncStorage.getItem('myKey').then((value) => {
                 // Update State
@@ -199,7 +199,7 @@ export default class ProfileViewer extends React.Component {
                                                 }
                                                 {Platform.OS === 'web' ?
                                                     <ImageWeb defaultSource={require('../GCSMART.svg')}
-                                                           style={{width: 20, height: 20, left: 20, bottom: 13}}/> :
+                                                           style={{width: 20, height: 20, left: 33, bottom: 13}}/> :
                                                     <Image source={require('../GCSMART.png')}
                                                               style={{width: 20, height: 20, left: 20, bottom: 13}}/>
                                                 }

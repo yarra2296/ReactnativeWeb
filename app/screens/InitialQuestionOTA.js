@@ -50,8 +50,6 @@ export default class InitialQuestionOTA extends React.Component {
     }
 
     EnterDetails() {
-        const { navigate } = this.props.navigation;
-        navigate("Details");
         if(this.state.SelectedValue === "Yes") {
             // Disabled due to Coding at present Posting is not needed
             const { params } = this.props.navigation.state;
@@ -69,8 +67,9 @@ export default class InitialQuestionOTA extends React.Component {
                 ),
             }).then((response) => response.json())
                 .then((responseJson) => {
+                    console.log("reponseJson in Initial Quesitons OTA is:", responseJson);
                     const {navigate} = this.props.navigation;
-                    navigate("Details",{data: this.props.navigation.state.data, childId: this.props.navigation.state.childId});
+                    navigate("Details",{data: this.state.data, childId: this.props.navigation.state.childId});
                     return responseJson;
                 })
                 .catch((error) => {
@@ -94,8 +93,9 @@ export default class InitialQuestionOTA extends React.Component {
                 ),
             }).then((response) => response.json())
                 .then((responseJson) => {
+                    console.log("reponseJson in Initial Quesitons OTA is:", responseJson);
                     const {navigate} = this.props.navigation;
-                    navigate("Details",{data: this.props.navigation.state.data, childId: this.props.navigation.state.childId});
+                    navigate("Details",{data: this.state.data, childId: this.props.navigation.state.childId});
                     return responseJson;
                 })
                 .catch((error) => {

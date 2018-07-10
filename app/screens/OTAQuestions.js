@@ -90,7 +90,7 @@ export default class OTAQuestions extends React.Component {
     }
 
     OpenQuestions() {
-        if(!this.state.data.content.ota_checklist) {
+        if(this.state.data.content.ota_checklist.length !== 0) {
             const { navigate } = this.props.navigation;
             navigate("Questions",{data: this.state.data, childId: this.state.childId})
         }
@@ -100,7 +100,7 @@ export default class OTAQuestions extends React.Component {
         }
         else {
             const { navigate } = this.props.navigation;
-            navigate("Details",{data: this.state.data, childId: this.state.childId});
+            navigate("Details",{data: this.state.data.content, childId: this.state.childId});
         }
     }
 

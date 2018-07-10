@@ -22,10 +22,11 @@ export default class HomeScreen extends React.Component {
         login: '',
         cacheData: '',
         childId: '',
+        data: '',
     }
   }
 
-  componentDidMount(){
+  componentWillMount(){
       if (Platform.OS === 'web') {
           AsyncStorage.getItem('myKey').then((value) => {
               // Update State
@@ -33,8 +34,23 @@ export default class HomeScreen extends React.Component {
                   cacheData: JSON.parse(value).content,
                   childId: JSON.parse(value).content.user.children[0].id,
               });
+              fetch(baseUrl + "/growthcheck/ota?child_id=" + JSON.parse(value).content.user.children[0].id + "&vc=" + vc, { //have to change the API call for children afterwards.
+                  method: "GET",
+                  headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                  },
+                  credentials: "include",
+              }).then((response) => response.json())
+                  .then((responseJson) => {
+                      this.setState({
+                          data: responseJson.content,
+                      })
+                      return responseJson;
+                  })
+                  .catch((error) => {
+                      console.error(error);
+                  });
               console.log("value of AsyncStorage Info is:", JSON.parse(value));
-              this.fetchData(this.state.cacheData);
           });
       }
       else {
@@ -44,13 +60,28 @@ export default class HomeScreen extends React.Component {
                   cacheData: JSON.parse(value).content,
                   childId: JSON.parse(value).content.user.children[0].id,
               });
+              fetch(baseUrl + "/growthcheck/ota?child_id=" + JSON.parse(value).content.user.children[0].id + "&vc=" + vc, { //have to change the API call for children afterwards.
+                  method: "GET",
+                  headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                  },
+                  credentials: "include",
+              }).then((response) => response.json())
+                  .then((responseJson) => {
+                      this.setState({
+                          data: responseJson.content,
+                      })
+                      return responseJson;
+                  })
+                  .catch((error) => {
+                      console.error(error);
+                  });
               console.log("value of AsyncStorage Info is:", JSON.parse(value));
-              this.fetchData(this.state.cacheData);
           });
       }
   }
 
-  fetchData(value) {
+  fetchData() {
       fetch(baseUrl + "/growthcheck/ota?child_id=" + this.state.childId + "&vc=" + vc, { //have to change the API call for children afterwards.
           method: "GET",
           headers: {
@@ -59,10 +90,10 @@ export default class HomeScreen extends React.Component {
           credentials: "include",
       }).then((response) => response.json())
           .then((responseJson) => {
+              console.log("response is:", this.state.data)
               this.setState({
                   data: responseJson.content,
               })
-              console.log("response is:", this.state.data)
               return responseJson;
           })
           .catch((error) => {
