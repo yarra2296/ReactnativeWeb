@@ -13,6 +13,7 @@ import {
 import {
     Image as ImageWeb,
 } from 'react-native-web';
+import {baseUrl, vc} from "../constants/constant";
 
 const {width, height} = Dimensions.get('window');
 
@@ -32,6 +33,10 @@ export default class CheckOut extends React.Component {
             isSelectedFirstPlan: true,
             isSelectedSecondPlan: false,
             isSelectedThirdPlan: false,
+            promoNumber: null,
+            responseData: null,
+            isShowPromoResponse: false,
+            isWrongPromoCode: false,
         }
     }
 
@@ -116,21 +121,32 @@ export default class CheckOut extends React.Component {
     }
 
     getChildPropsWithImage(value, array) {
-        if(value === this.state.childId) {
-            return ( <TouchableOpacity onPress={()=>this.selectChild(value)} style={{borderWidth: 1, borderColor: "#D82968", borderRadius: 100, width: 50, height: 50}}>
+        if(this.state.childId.indexOf(value) > -1) {
+            return (<TouchableOpacity onPress={() => this.deSelectChild(value)} style={{
+                borderWidth: 1,
+                borderColor: "#D82968",
+                left: 5,
+                borderRadius: 100,
+                width: 50,
+                height: 50,
+                top: 5
+            }}>
                 {Platform.OS === "web" ?
-                    <ImageWeb defaultSource={array.pic_url} style={{borderRadius: 100, width: 50, height: 50}}/> :
-                    <Image source={array.pic_url} style={{borderRadius: 100, width: 50, height: 50}}/>
+                    <ImageWeb defaultSource={array.pic_url} style={{width: 50, height: 50, borderRadius: 100}}/> :
+                    <Image source={array.pic_url} style={{width: 50, height: 50}}/>
                 }
-            </TouchableOpacity> )
+            </TouchableOpacity>)
         }
         else {
-            return ( <TouchableOpacity onPress={()=>this.selectChild(value)} style={{borderRadius: 100, width: 50, height: 50}}>
+            return (<TouchableOpacity onPress={() => this.selectChild(value)}
+                                      style={{borderRadius: 100, left: 5, width: 50, height: 50, top: 5}}>
                 {Platform.OS === "web" ?
-                    <ImageWeb defaultSource={array.pic_url} style={{borderRadius: 100, width: 50, height: 50}}/> :
-                    <Image source={array.pic_url} style={{borderRadius: 100, width: 50, height: 50}}/>
+                    <ImageWeb defaultSource={array.pic_url}
+                              style={{borderRadius: 100, width: 50, height: 50}}/> :
+                    <Image source={array.pic_url}
+                           style={{borderRadius: 100, width: 50, height: 50}}/>
                 }
-            </TouchableOpacity> )
+            </TouchableOpacity>)
         }
     }
 
@@ -142,19 +158,110 @@ export default class CheckOut extends React.Component {
     }
 
     applyPromo() {
+        fetch(baseUrl+"/payment/apply-coupon?vc="+vc, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "selected": true,
+                "user_id": this.state.content.user.id,
+                "child_ids": this.state.childId,
+                "offer_id": "",
+                "plan_id": this.state.plansData.gc_plan_list[0].sub_plans[0].id,
+                "availed_offer_id": 0,
+                "coupon_code": this.state.promoNumber,
+                "is_selected": true
+            }),
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                if (responseJson.code === 200) {
+                    this.setState({
+                        responseData: responseJson,
+                        isShowPromoResponse: true,
+                        isWrongPromoCode: false,
+                    })
+                    console.log("response after Making the Apply Promocode is:", responseJson);
+                }
+                else {
+                    this.setState({
+                        isWrongPromoCode: true,
+                    })
+                }
+                return responseJson;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
 
+    removePromoCode() {
+        fetch(baseUrl+"/payment/apply-coupon?vc="+vc, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "user_id": this.state.content.user.id,
+                "child_ids": this.state.childId,
+                "offer_id": "",
+                "plan_id": this.state.plansData.gc_plan_list[0].sub_plans[0].id,
+                "availed_offer_id": this.state.responseData.content.availed_offer_id,
+                "coupon_code": this.state.promoNumber,
+                "is_selected": false
+            }),
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                if (responseJson.code === 200) {
+                    this.setState({
+                        isShowPromoResponse: false,
+                        responseData: null,
+                    })
+                }
+                return responseJson;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 
     paymentPage() {
+        const price = this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price;
+        fetch(baseUrl+"/payment?vc="+vc, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "additional_amount": 0.0,
+                "availed_offer_id": 593,
+                "child_ids": this.state.childId,
+                "discount": this.state.selectSubPlan.discount_price * this.state.childId.length,
+                "is_auto_renewal": false,
+                "plan_amount": this.state.selectSubPlan.price * this.state.childId.length,
+                "plan_id": this.state.plansData.gc_plan_list[0].sub_plans[0].id,
+                "total_amount": price * this.state.childId.length,
+                "user_id": this.state.content.user.id,
+            }),
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                return responseJson;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
         const { navigate } = this.props.navigation;
         navigate('Payment');
     }
 
     render() {
         const {params} = this.props.navigation.state;
-        const price = this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price;
+        var price = (this.state.selectSubPlan.price - this.state.selectSubPlan.discount_price);
         const PayPrice = this.state.childId.length * this.state.selectSubPlan.title;
-        console.log("values of data's in checkout page:", this.state.content, this.state.plansData, this.state.childId)
+        console.log("values of data's in checkout page:", this.state.content, this.state.plansData, this.state.plansData.gc_plan_list[0].sub_plans[0].id)
         return(
             <View>
             {Platform.OS === "web" ?
@@ -171,7 +278,7 @@ export default class CheckOut extends React.Component {
                                 Select Child {'\t\t\t'}
                             </Text>
                             <Text style={{color: "#FE1588"}}>
-                                ({this.state.content.user.children.length})
+                                ({this.state.childId.length})
                             </Text>
                         </Text>
                     </View>
@@ -267,10 +374,10 @@ export default class CheckOut extends React.Component {
                         }}>
                             <Text style={{color: "#909090", paddingRight: 20, fontSize: 15}}>
                                 GrowthCheck Smart
-                                x{this.state.childId.length} {'\n'} @{this.state.selectSubPlan.title} {this.state.selectSubPlan.text}
+                                x{this.state.childId.length} {'\n'}@{this.state.selectSubPlan.title} {this.state.selectSubPlan.text}
                             </Text>
                             <Text style={{color: "#909090", paddingLeft: 20, fontSize: 15}}>
-                                {this.state.selectSubPlan.price * this.state.childId.length}
+                                Rs. {this.state.selectSubPlan.price * this.state.childId.length}
                             </Text>
                         </View>
                         <View style={{
@@ -286,6 +393,22 @@ export default class CheckOut extends React.Component {
                                 -Rs. {this.state.selectSubPlan.discount_price * this.state.childId.length}
                             </Text>
                         </View>
+                        {this.state.responseData && this.state.responseData.content.amount_text ?
+                            <View style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                marginTop: 5
+                            }}>
+                                <Text style={{color: "#FE3096", paddingRight: 20, fontSize: 15}}>
+                                    {this.state.responseData.content.discount_text}
+                                </Text>
+                                <Text style={{color: "#FE3096", paddingLeft: 20, fontSize: 15}}>
+                                    {this.state.responseData.content.amount_text}
+                                </Text>
+                            </View> :
+                            <View/>
+                        }
                         <View style={{
                             flexDirection: "row",
                             justifyContent: "space-between",
@@ -295,9 +418,14 @@ export default class CheckOut extends React.Component {
                             <Text style={{fontWeight: "bold", paddingRight: 20}}>
                                 TOTAL
                             </Text>
-                            <Text style={{fontWeight: "bold", paddingLeft: 20}}>
-                                {price * this.state.childId.length}
-                            </Text>
+                            {this.state.responseData && this.state.responseData.content.amount ?
+                                <Text style={{fontWeight: "bold", paddingLeft: 20}}>
+                                    {(price * this.state.childId.length) - this.state.responseData.content.amount}
+                                </Text> :
+                                <Text style={{fontWeight: "bold", paddingLeft: 20}}>
+                                    Rs. {price * this.state.childId.length}
+                                </Text>
+                            }
                         </View>
                     </View>
                     <View style={{
@@ -307,36 +435,76 @@ export default class CheckOut extends React.Component {
                         marginTop: 10,
                         marginBottom: 10
                     }}/>
-                    <View style={{flexDirection: "row", justifyContent: "flex-start", right: 15}}>
-                        <TextInput
-                            style={styles.passwordInput}
-                            placeholder="Apply Promo for Selected Plan"
-                            placeholderTextColor="#D5D5D5"
-                            autoCapitalize="none"
-                            onChangeText={(text) => this.setState({promoNumber: text})}
-                        />
-                        <TouchableOpacity onPress={() => this.applyPromo()}
-                                          style={{borderRadius: 2, backgroundColor: "#FE017E", height: 39, top: 15}}>
-                            <Text style={{
-                                color: "#FCFCFC",
-                                paddingLeft: 10,
-                                paddingRight: 10,
-                                paddingTop: 8
-                            }}>Apply</Text>
-                        </TouchableOpacity>
+                    <View>
+                        {this.state.isShowPromoResponse ?
+                            <View style={{flexDirection: "row", justifyContent: "space-between", top: 30}}>
+                                <Text style={{color: "green", fontSize: 10, marginTop: 5}}>{this.state.responseData.content.status_text}</Text>
+                                <TouchableOpacity onPress={()=>this.removePromoCode()}>
+                                    <Text style={{color: "grey", fontSize: 15, marginLeft: 50}}>Remove</Text>
+                                </TouchableOpacity>
+                            </View>
+                            :
+                            <View>
+                                <View style={{flexDirection: "row", justifyContent: "flex-start", right: 15}}>
+                                    <TextInput
+                                        style={styles.passwordInput}
+                                        placeholder="Apply Promo for Selected Plan"
+                                        placeholderTextColor="#D5D5D5"
+                                        autoCapitalize="none"
+                                        onChangeText={(text) => this.setState({promoNumber: text})}
+                                    />
+                                    <TouchableOpacity onPress={() => this.applyPromo()}
+                                                      style={{
+                                                          borderRadius: 2,
+                                                          backgroundColor: "#FE017E",
+                                                          height: 39,
+                                                          top: 15
+                                                      }}>
+                                        <Text style={{
+                                            color: "#FCFCFC",
+                                            paddingLeft: 10,
+                                            paddingRight: 10,
+                                            paddingTop: 8
+                                        }}>Apply</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View>
+                                    {this.state.isWrongPromoCode ?
+                                        <View>
+                                        <Text style={{marginTop: 10, marginLeft: 30, color: "red", fontSize: 10}}>
+                                            Please enter the correct promo code!
+                                        </Text>
+                                        </View> :
+                                        <View>
+                                        </View>
+                                    }
+                                </View>
+                            </View>
+                        }
                     </View>
                     <View style={{marginTop: 70}}>
                         <TouchableOpacity onPress={() => this.paymentPage()}
                                           style={{backgroundColor: "#FE017E", width: 350, borderRadius: 5}}>
-                            <Text style={{
-                                fontWeight: "bold",
-                                color: "#FFFFFF",
-                                paddingTop: 10,
-                                paddingBottom: 10,
-                                textAlign: "center"
-                            }}>
-                                Pay Rs. {price * this.state.childId.length}
-                            </Text>
+                            {this.state.responseData && this.state.responseData.content.amount ?
+                                <Text style={{
+                                    fontWeight: "bold",
+                                    color: "#FFFFFF",
+                                    paddingTop: 10,
+                                    paddingBottom: 10,
+                                    textAlign: "center"
+                                }}>
+                                    Pay Rs. {(price * this.state.childId.length) - this.state.responseData.content.amount}
+                                </Text> :
+                                <Text style={{
+                                    fontWeight: "bold",
+                                    color: "#FFFFFF",
+                                    paddingTop: 10,
+                                    paddingBottom: 10,
+                                    textAlign: "center"
+                                }}>
+                                    Pay Rs. {price * this.state.childId.length}
+                                </Text>
+                            }
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -450,7 +618,7 @@ export default class CheckOut extends React.Component {
                                 x{this.state.childId.length} {'\n'} @{this.state.selectSubPlan.title} {this.state.selectSubPlan.text}
                             </Text>
                             <Text style={{color: "#909090", paddingLeft: 20, fontSize: 15}}>
-                                {this.state.selectSubPlan.price * this.state.childId.length}
+                                Rs. {this.state.selectSubPlan.price * this.state.childId.length}
                             </Text>
                         </View>
                         <View style={{
@@ -476,7 +644,7 @@ export default class CheckOut extends React.Component {
                                 TOTAL
                             </Text>
                             <Text style={{fontWeight: "bold", paddingLeft: 20}}>
-                                {price * this.state.childId.length}
+                                Rs. {price * this.state.childId.length}
                             </Text>
                         </View>
                     </View>
@@ -487,23 +655,52 @@ export default class CheckOut extends React.Component {
                         marginTop: 10,
                         marginBottom: 10
                     }}/>
-                    <View style={{flexDirection: "row", justifyContent: "flex-start", right: 15}}>
-                        <TextInput
-                            style={styles.passwordInput}
-                            placeholder="Apply Promo for Selected Plan"
-                            placeholderTextColor="#D5D5D5"
-                            autoCapitalize="none"
-                            onChangeText={(text) => this.setState({promoNumber: text})}
-                        />
-                        <TouchableOpacity onPress={() => this.applyPromo()}
-                                          style={{borderRadius: 2, backgroundColor: "#FE017E", height: 39, top: 15}}>
-                            <Text style={{
-                                color: "#FCFCFC",
-                                paddingLeft: 10,
-                                paddingRight: 10,
-                                paddingTop: 8
-                            }}>Apply</Text>
-                        </TouchableOpacity>
+                    <View>
+                        {this.state.isShowPromoResponse ?
+                            <View style={{flexDirection: "row", justifyContent: "space-between", top: 30}}>
+                                <Text style={{color: "green", fontSize: 10, marginTop: 5}}>{this.state.responseData.content.status_text}</Text>
+                                <TouchableOpacity onPress={()=>this.removePromoCode()}>
+                                    <Text style={{color: "grey", fontSize: 15}}>Remove</Text>
+                                </TouchableOpacity>
+                            </View>
+                            :
+                            <View>
+                                <View style={{flexDirection: "row", justifyContent: "flex-start", right: 15}}>
+                                    <TextInput
+                                        style={styles.passwordInput}
+                                        placeholder="Apply Promo for Selected Plan"
+                                        placeholderTextColor="#D5D5D5"
+                                        autoCapitalize="none"
+                                        onChangeText={(text) => this.setState({promoNumber: text})}
+                                    />
+                                    <TouchableOpacity onPress={() => this.applyPromo()}
+                                                      style={{
+                                                          borderRadius: 2,
+                                                          backgroundColor: "#FE017E",
+                                                          height: 39,
+                                                          top: 15
+                                                      }}>
+                                        <Text style={{
+                                            color: "#FCFCFC",
+                                            paddingLeft: 10,
+                                            paddingRight: 10,
+                                            paddingTop: 8
+                                        }}>Apply</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View>
+                                    {this.state.isWrongPromoCode ?
+                                        <View>
+                                            <Text style={{marginTop: 10, marginLeft: 30, color: "red", fontSize: 10}}>
+                                                Please enter the correct promo code!
+                                            </Text>
+                                        </View> :
+                                        <View>
+                                        </View>
+                                    }
+                                </View>
+                            </View>
+                        }
                     </View>
                     <View style={{marginTop: 10}}>
                         <TouchableOpacity onPress={() => this.paymentPage()}

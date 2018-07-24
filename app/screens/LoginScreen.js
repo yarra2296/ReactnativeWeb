@@ -157,7 +157,7 @@ export default class LoginScreen extends React.Component {
 
     AddChild(value) {
         const { navigate } = this.props.navigation;
-        if(value.content.user.children.length === 3) {
+        if(value.content.user.children.length >= 3) {
             navigate("HomeScreen")
         }
         else {
