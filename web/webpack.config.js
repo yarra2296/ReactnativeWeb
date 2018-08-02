@@ -3,6 +3,7 @@
 const path = require('path');
 const webpack = require('webpack');
 
+
 const rootDirectory = path.resolve(__dirname, '../');
 const appDirectory = path.resolve(__dirname, '../app');
 
@@ -15,6 +16,7 @@ const babelLoaderConfiguration = {
   test: /\.js$/,
   // Add every directory that needs to be compiled by Babel during the build.
   include: [
+    path.resolve(rootDirectory, '/node_modules\\/react-native-/'),
     path.resolve(appDirectory, 'index.web.js'),
     path.resolve(rootDirectory, 'app'),
     path.resolve(rootDirectory, 'node_modules/react-native-uncompiled'),
@@ -23,7 +25,8 @@ const babelLoaderConfiguration = {
     path.resolve(rootDirectory, 'node_modules/react-native-drawer-layout'),
     path.resolve(rootDirectory, 'node_modules/react-native-dismiss-keyboard'),
     path.resolve(rootDirectory, 'node_modules/react-native-safe-area-view'),
-    path.resolve(rootDirectory, 'node_modules/react-native-tab-view')
+    path.resolve(rootDirectory, 'node_modules/react-native-tab-view'),
+    path.resolve(appDirectory, 'node_modules/react-native-web-webview'),
   ],
   use: {
     loader: 'babel-loader',
@@ -75,7 +78,16 @@ module.exports = {
   module: {
     rules: [
       babelLoaderConfiguration,
-      imageLoaderConfiguration
+      imageLoaderConfiguration,
+        {
+        test: /postMock.html$/,
+    use: {
+        loader: 'file-loader',
+        options: {
+            name: '[name].[ext]',
+        }
+    },
+},
     ]
   },
 
@@ -93,7 +105,7 @@ module.exports = {
     // If you're working on a multi-platform React Native app, web-specific
     // module implementations should be written in files using the extension
     // `.web.js`.
-    extensions: ['.web.js', '.js']
+    extensions: ['.web.js', '.js'],
   },
 
   devServer: {

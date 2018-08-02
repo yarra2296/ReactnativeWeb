@@ -7,7 +7,7 @@
 import React from 'react';
 import {
   AppRegistry,
-} from 'react-native';
+} from 'react-native-web';
 
 import { StackNavigator } from 'react-navigation';
 
@@ -17,6 +17,7 @@ import HomeScreen from './screens/HomeScreen.js';
 import OTA from './screens/OTA.js';
 import CheckOut from './screens/CheckOut.js';
 import PaymentSuccessful from './screens/PaymentSuccessful.js';
+import PayTM from './screens/PayTM.js';
 import OTAQuestions from './screens/OTAQuestions.js';
 import InitialQuestionOTA from './screens/InitialQuestionOTA.js';
 import EnterDetailsOTA from './screens/EnterDetailsOTA.js';
@@ -42,6 +43,7 @@ const NavigationWebApplication = StackNavigator({
     OTA: {screen: OTA},
     CheckOut: {screen: CheckOut},
     Payment: {screen: PaymentSuccessful},
+    PayTM: {screen: PayTM},
     OTAQuestions: {screen: OTAQuestions},
     Questions: {screen: InitialQuestionOTA},
     Details: {screen: EnterDetailsOTA},
