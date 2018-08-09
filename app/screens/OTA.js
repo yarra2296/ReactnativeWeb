@@ -7,7 +7,6 @@ import {
     AsyncStorage as AsyncStorageNative,
     ScrollView
 } from "react-native";
-
 import {
     AsyncStorage
 } from 'react-native-web';
@@ -17,6 +16,8 @@ import { baseUrl, vc } from "../constants/constant";
 import GrowthCheckFree from '../components/GrowthCheckFree.js';
 import GrowthCheckSmart from '../components/GrowthCheckSmart.js';
 import GrowthCheckPro from '../components/GrowthCheckPro.js';
+
+import { Route, Link} from 'react-router-dom';
 
 export default class OTA extends React.Component {
 
@@ -142,6 +143,10 @@ export default class OTA extends React.Component {
     OpenGrowthCheck() {
         const { navigate } = this.props.navigation;
         navigate("CheckOut",{cacheData: this.state.cacheData, plansData: this.state.subscriptionPlansData})
+    }
+
+    RedirectToPayment() {
+        this.props.history.push({pathname: "/growth_check/payment", state: { cacheData: this.state.cacheData, plansData: this.state.subscriptionPlansData}})
     }
 
     render() {
@@ -311,21 +316,26 @@ export default class OTA extends React.Component {
                         </View>
                     </View>
                     {this.viewFeatureList()}
-                    <View style={{alignItems: "center", justifyContent: "center"}}>
-                        <TouchableOpacity onPress={() => this.OpenGrowthCheck()} style={{
-                            marginBottom: 20,
-                            marginTop: 5,
-                            marginLeft: 20,
-                            backgroundColor: "#F1127C",
-                            paddingTop: 5,
-                            paddingBottom: 5,
-                            padding: 120,
-                            borderRadius: 50
-                        }}>
-                            <Text style={{color: "#FEF4F9", fontWeight: "bold", fontSize: 20}}>
-                                Continue
-                            </Text>
-                        </TouchableOpacity>
+                    <View style={{alignItems: "center", justifyContent: "center", marginTop: 10}}>
+                       {/* <div style={{marginTop: 30, borderWidth: 1, borderColor: "black", backgroundColor: "#FE017E", paddingLeft: 30, paddingRight: 30, padding: 10, borderRadius: 10, width: 250, justifyContent: "center", alignItems: "center", marginBottom: 20}}>
+                            <Link to={{ pathname: '/growth_check/payment', state: { cacheData: this.state.cacheData, plansData: this.state.subscriptionPlansData} }} style={{borderWidth: 1, borderColor: "black", color: "#FFFFFF", fontSize: 20, fontWeight: "bold", marginLeft: 85}}>Continue</Link>
+                        </div>*/}
+                        <View style={{alignItems: "center", justifyContent: "center"}}>
+                            <TouchableOpacity onPress={() => this.RedirectToPayment()} style={{
+                                marginBottom: 20,
+                                marginTop: 5,
+                                marginLeft: 20,
+                                backgroundColor: "#F1127C",
+                                paddingTop: 5,
+                                paddingBottom: 5,
+                                padding: 120,
+                                borderRadius: 50
+                            }}>
+                                <Text style={{color: "#FEF4F9", fontWeight: "bold", fontSize: 20}}>
+                                    Continue
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
                 :

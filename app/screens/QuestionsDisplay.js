@@ -14,22 +14,21 @@ import {
 import {baseUrl, vc} from "../constants/constant";
 import qs from "qs";
 
-const { height, width } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
 export default class QuestionsDisplay extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state
         this.state = {
-            data: params.data,
-            childId: params.childId,
+            data: props.location.state.data,
+            childId: props.location.state.childId,
             apiData: null,
             image: null,
             color: null,
             selectedSymptoms: [],
-            question_count: params.question_count,
-            pending_question_count: params.pending_question_count,
+            question_count: props.location.state.question_count,
+            pending_question_count: props.location.state.pending_question_count,
         }
     }
 
@@ -168,8 +167,7 @@ export default class QuestionsDisplay extends React.Component {
         }).then((response) => response.json())
             .then((responseJson) => {
                 console.log("response in post answers API is:", responseJson);
-                const { navigate } = this.props.navigation;
-                navigate("OTATest",{data: responseJson, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data.id, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count})
+                this.props.history.push({pathname: "/growth_check/ota/category/questions", state: {data: responseJson, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data.id, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count}})
                 return responseJson;
             })
             .catch((error) => {
@@ -178,8 +176,7 @@ export default class QuestionsDisplay extends React.Component {
     }
 
     QuestionAnswers() {
-        const { navigate } = this.props.navigation;
-        navigate('OTATest',{data: this.state.apiData, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data.id, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count})
+        this.props.history.push({pathname: "/growth_check/ota/category/questions", state: {data: this.state.apiData, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data.id, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count}})
     }
 
     onSelectSymptoms(value) {
@@ -210,7 +207,7 @@ export default class QuestionsDisplay extends React.Component {
     render(){
         console.log("data in QuestionsDisplay is:", this.state.data, this.state.childId, this.state.apiData);
         return (
-            <View>
+            <View style={{height: height}}>
                 {this.state.apiData && this.state.apiData.content ?
                     <View>
                     {this.state.data.id === "78a2116e-c64f-4a49-9c9a-382e5ac661b8" ?

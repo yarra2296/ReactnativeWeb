@@ -23,10 +23,9 @@ export default class ProfileViewer extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state;
         this.state = {
             data: null,
-            childId: params.childId,
+            childId: props.location.state.childId,
             cacheData: null,
         }
     }
@@ -90,12 +89,10 @@ export default class ProfileViewer extends React.Component {
                     apiData: responseJson,
                 })
                 if(responseJson.content.overall_child_Development.selected_category) {
-                    const { navigate } = this.props.navigation;
-                    navigate('QuestionsDisplay', {data: value, color: color, image: image, childId: this.state.childId, question_count: value.total_questions, pending_question_count: value.pending_questions})
+                    this.props.history.push({pathname: "/growth_check/ota/category/info", state:{data: value, color: color, image: image, childId: this.state.childId, question_count: value.total_questions, pending_question_count: value.pending_questions}})
                 }
                 else {
-                    const { navigate } = this.props.navigation;
-                    navigate("OTATest",{ data: responseJson, childId: this.state.childId, image: image, color: color, category_id: value.id, question_count: value.total_questions, pending_question_count: value.pending_questions})
+                    this.props.history.push({pathname: "/growth_check/ota/category/questions", state:{ data: responseJson, childId: this.state.childId, image: image, color: color, category_id: value.id, question_count: value.total_questions, pending_question_count: value.pending_questions}})
                 }
                 console.log("api response data is:", this.state.apiData)
                 return responseJson;
@@ -106,8 +103,7 @@ export default class ProfileViewer extends React.Component {
     }
 
     openReport() {
-        const { navigate } = this.props.navigation;
-        navigate("Report",{childId: this.state.childId})
+        this.props.history.push({pathname: "/growth_check/ota/child/report", state:{childId: this.state.childId}})
     }
 
     render() {

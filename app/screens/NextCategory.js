@@ -19,16 +19,15 @@ export default class NextCategory extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state
         this.state = {
-            data: params.data,
-            childId: params.childId,
+            data: props.location.state.data,
+            childId: props.location.state.childId,
             apiData: null,
             image: null,
             color: null,
             selectedSymptoms: [],
-            question_count: params.question_count,
-            pending_question_count: params.pending_question_count,
+            question_count: props.location.state.question_count,
+            pending_question_count: props.location.state.pending_question_count,
         }
     }
 
@@ -151,8 +150,7 @@ export default class NextCategory extends React.Component {
     }
 
     QuestionAnswers() {
-        const { navigate } = this.props.navigation;
-        navigate('OTATest',{data: this.state.apiData, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count})
+        this.props.history.push({pathname: "/OTATest", state: {data: this.state.apiData, childId: this.state.childId, image: this.state.image, color: this.state.color, category_id: this.state.data, question_count: this.state.question_count, pending_question_count: this.state.pending_question_count}})
     }
 
     onSelectSymptoms(value) {

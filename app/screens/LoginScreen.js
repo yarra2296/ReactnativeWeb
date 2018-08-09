@@ -58,24 +58,7 @@ export default class LoginScreen extends React.Component {
                 console.log("value of AsyncStorage Info is:", this.state.cacheData)
             });
         }
-        /*const value = AsyncStorage.getItem('myKey');
-           console.log("value immediately after getting the values from asyncStorage:", value);
-          if (JSON.parse(value).code !== 401) {
-                console.log("new Cache data", value )
-                console.log("In If condition")
-                this.setState({
-                    cacheData: value,
-                })
-                console.log("value of cache in componentDidMount:", this.state.cacheData)
-            }
-            else {
-                console.log("Else Condition, Hi i am in else condition;")
-            }
-        } catch (error) {
-            // Error retrieving data
-        }
-*/
-        }
+    }
 
     sendOtp(){
         console.log("values:", this.state.mobileNumber)
@@ -156,22 +139,20 @@ export default class LoginScreen extends React.Component {
     }
 
     AddChild(value) {
-        const { navigate } = this.props.navigation;
         if(value.content.user.children.length >= 3) {
-            navigate("HomeScreen")
+            this.props.history.push({pathname: "/HomeScreen"})
         }
         else {
-            navigate("AddChildren");
+            this.props.history.push({pathname: "/add/children"})
         }
     }
 
     navigate(){
-        const { navigate } = this.props.navigation
         if(this.state.cacheData !== null ) {
-            return navigate('HomeScreen')
+            return this.props.history.replace({pathname: "/HomeScreen"})
         }
         else {
-            return navigate('AddChildren')
+            return this.props.history.push({pathname: "/add/children"})
         }
     }
 

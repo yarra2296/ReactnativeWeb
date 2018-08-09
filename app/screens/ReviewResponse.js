@@ -20,13 +20,12 @@ export default class ReviewResponse extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state;
         this.state = {
-            data: params.data,
-            uiData: params.uiData,
-            color: params.color,
-            image: params.image,
-            childId: params.childId,
+            data: props.location.state.data,
+            uiData: props.location.state.uiData,
+            color: props.location.state.color,
+            image: props.location.state.image,
+            childId: props.location.state.childId,
             responsesData: null,
             selectedOptions: [],
             isFullScore: null,
@@ -79,7 +78,7 @@ export default class ReviewResponse extends React.Component {
     updateAnswersAPI() {
         // Here we will check all the Questions & options from the API and any changes, We have to call the history answers, POST API.
         // API CALL HERE IF DIFFERENT ANSWERS IS SELECTED.
-        /*fetch(baseUrl + "/scorecard/history/answers?vc="+vc+"&plan_type=2", {
+        fetch(baseUrl + "/scorecard/history/answers?vc="+vc+"&plan_type=2", {
             method: "POST",
             credentials: "include",
             headers: {
@@ -115,9 +114,7 @@ export default class ReviewResponse extends React.Component {
                         })
                     }
                     else {
-                        const { navigate } = this.props.navigation;
-                        /!* navigate("Profile",{childId: this.state.childId})*!/
-                        navigate('Response',{data: this.state.data, uiData: this.state.uiData, childId: this.state.childId, color: this.state.color, image: this.state.image})
+                        this.props.history.push({pathname: "/ResponseScreen", state: {data: this.state.data, uiData: this.state.uiData, childId: this.state.childId, color: this.state.color, image: this.state.image}})
                     }
                     console.log("response in post answers API is:", responseJson);
                     return responseJson;
@@ -125,10 +122,7 @@ export default class ReviewResponse extends React.Component {
             })
             .catch((error) => {
                 console.error(error);
-            });*/ // Before this the logic for If answers is Present or not should be updated.
-        const { navigate } = this.props.navigation; //On success call Back of API.
-        navigate("Response")
-
+            }); // Before this the logic for If answers is Present or not should be updated.
     }
 
     replaceOption(question, option, question_no, option_no) {

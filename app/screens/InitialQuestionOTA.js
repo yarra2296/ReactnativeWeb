@@ -15,9 +15,9 @@ export default class InitialQuestionOTA extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state;
         this.state = {
-            data: params.data.content,
+            data: props.location.state.data.content,
+            childId: props.location.state.childId,
             isSelectedOption: false,
             SelectedValue: null,
             FlatListItems: [
@@ -52,8 +52,7 @@ export default class InitialQuestionOTA extends React.Component {
     EnterDetails() {
         if(this.state.SelectedValue === "Yes") {
             // Disabled due to Coding at present Posting is not needed
-            const { params } = this.props.navigation.state;
-            fetch(baseUrl+"/children/"+params.childId+"/info", {
+            fetch(baseUrl+"/children/"+props.location.state.childId+"/info", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -68,8 +67,7 @@ export default class InitialQuestionOTA extends React.Component {
             }).then((response) => response.json())
                 .then((responseJson) => {
                     console.log("reponseJson in Initial Quesitons OTA is:", responseJson);
-                    const {navigate} = this.props.navigation;
-                    navigate("Details",{data: this.state.data, childId: this.props.navigation.state.childId});
+                    this.props.history.push({pathname: "/growth_check/ota/child/biometric/details", state: {data: this.state.data, childId: this.state.childId}})
                     return responseJson;
                 })
                 .catch((error) => {
@@ -78,8 +76,7 @@ export default class InitialQuestionOTA extends React.Component {
         }
         else {
             // Disabled due to Coding at present Posting is not needed
-            const { params } = this.props.navigation.state;
-            fetch(baseUrl+"/children/"+params.childId+"/info", {
+            fetch(baseUrl+"/children/"+props.location.state.childId+"/info", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -94,8 +91,7 @@ export default class InitialQuestionOTA extends React.Component {
             }).then((response) => response.json())
                 .then((responseJson) => {
                     console.log("reponseJson in Initial Quesitons OTA is:", responseJson);
-                    const {navigate} = this.props.navigation;
-                    navigate("Details",{data: this.state.data, childId: this.props.navigation.state.childId});
+                    this.props.history.push({pathname: "/growth_check/ota/child/biometric/details", state: {data: this.state.data, childId: this.state.childId}})
                     return responseJson;
                 })
                 .catch((error) => {
@@ -105,7 +101,6 @@ export default class InitialQuestionOTA extends React.Component {
     }
 
     render() {
-        const { params } = this.props.navigation.state;
         console.log("value of props:", this.state.data);
         return(
             <View style={{alignItems: "center", justifyContent: "center", marginTop: 20}}>

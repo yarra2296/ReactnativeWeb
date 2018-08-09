@@ -2,6 +2,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 
 const rootDirectory = path.resolve(__dirname, '../');
@@ -71,7 +72,8 @@ module.exports = {
   // configures where the build ends up
   output: {
     filename: 'bundle.web.js',
-    path: path.resolve('./', 'public')
+    path: path.resolve('./', 'public'),
+    publicPath: '/'
   },
 
   // ...the rest of your config
@@ -91,13 +93,15 @@ module.exports = {
     ]
   },
 
-  plugins: [
+
+    plugins: [
     // `process.env.NODE_ENV === 'production'` must be `true` for production
     // builds to eliminate development checks and reduce build size. You may
     // wish to include additional optimizations.
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      __DEV__: process.env.NODE_ENV === 'production' || true
+      __DEV__: process.env.NODE_ENV === 'production' || true,
+      template: 'app/HomeScreen.js'
     })
   ],
 
@@ -112,6 +116,7 @@ module.exports = {
     contentBase: path.join(__dirname, "../public"),
     compress: false,
     port: 9000,
-    host: "0.0.0.0"
+    host: "0.0.0.0",
+    historyApiFallback: true,
   }
 }

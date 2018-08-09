@@ -51,54 +51,15 @@ export default class AddChildren extends React.Component {
             month: '',
             year: '',
             userData: '',
-            imagePick: 'success',
-            uri: null,
-            file: '',
-            file_type: '',
             isImageLoaded: false,
+            image: null,
+            AWSImageUrl: null,
         }
     }
 
     componentWillMount() {
 
     }
-
-    _handleImage = ({ uri }) => {
-        this.setState({
-            uri: uri,
-            isImageLoaded: true,
-        })
-    };
-
-    dataURItoBlob(uri) {
-        if(this.state.isImageLoaded) {
-            console.log("HI i am in conversion of the file:")
-            // convert base64/URLEncoded data component to raw binary data held in a string
-            var byteString;
-            if (uri.split(',')[0].indexOf('base64') >= 0)
-                byteString = atob(uri.split(',')[1]);
-            else
-                byteString = unescape(uri.split(',')[1]);
-
-            // separate out the mime component
-            var mimeString = uri.split(',')[0].split(':')[1].split(';')[0];
-
-            // write the bytes of the string to a typed array
-            var ia = new Uint8Array(byteString.length);
-            for (var i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            this.setState({
-                file: ia,
-                file_type: mimeString,
-            })
-            return new Blob([ia], {type: mimeString});
-        }
-    }
-
-    _handleFail = ({ error }) => {
-        console.log(error);
-    };
 
     boyDeSelected() {
         this.setState({isBoy: false, gender: ''})
@@ -116,99 +77,55 @@ export default class AddChildren extends React.Component {
         this.setState({isGirl: false, gender: ''})
     }
 
-    AddChild() {
-        if(this.state.uri) {
-            fetch(baseUrl+"/get-aws-upload-signature?mimetype=image/jpeg", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-            }).then((response) => response.json())
-                .then((responseJson) => {
-                    this.getparams(responseJson);
-                    console.log("response in aws upload is:",responseJson);
-                    return responseJson;
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        }
-        else {
-            return (
-                <View>
-                    <Text style={{color: "red"}}>Upload Image Again. The Image Uploaded can't be accessed</Text>
-                </View>
-            )
-        }
+    AddImage(event) {
+        this.setState({
+            image: event.target.files[0],
+        })
+        fetch(baseUrl+"/get-aws-upload-signature?mimetype=image/jpeg", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                console.log("response in aws upload is:",responseJson);
+                this.getparams(responseJson);
+                return responseJson;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 
     getparams(AWSData) {
-       /* const file = {
-            // `uri` can also be a file system path (i.e. file://)
-            uri: this.state.file,
-            name: "image.jpeg",
-            type: "image/jpeg"
-        }
-
-        const options = {
-            accessKey: "AKIAJ2PO4SJFYQINQMIQ",
-            policy: AWSData.content.p,
-            signature: AWSData.content.s,
-            acl: "public-read",
-            uri: this.state.file,
-        }
-
-        RNS3.put(file, options).then(response => {
-            if (response.status !== 201)
-                throw new Error("Failed to upload image to S3");
-            console.log(response.body);
-            /!**
-             * {
-   *   postResponse: {
-   *     bucket: "your-bucket",
-   *     etag : "9f620878e06d28774406017480a59fd4",
-   *     key: "uploads/image.png",
-   *     location: "https://your-bucket.s3.amazonaws.com/uploads%2Fimage.png"
-   *   }
-   * }
-             *!/
-        });*/
-
-        console.log("file is:", this.state.file);
-        var data = new FormData();
-        var uri=this.state.uri;
-        var type="image/jpeg";
-        var imageName="Test.jpeg";
-        data.append("policy",AWSData.content.p);
-        data.append("signature",AWSData.content.s);
-        data.append("AWSAccessKeyId","AKIAJ2PO4SJFYQINQMIQ");
-        data.append("acl","public-read");
-        data.append("key","Test.jpeg");
-        data.append("Content-Type",type)
-        data.append("file", this.state.file);
-        data.append("type",type);
-
-        var request=new XMLHttpRequest();
-        // request.setRequestHeader('content-Type', 'multipart/form-data')
-        request.open('POST',"https://parentlane.s3.amazonaws.com/",true);
-        request.onreadystatechange=function(status){
-            if(request.readyState!=4){
-                return;
-            }
-            if(request.status==200){
-                console.log("success",request.responseText);
-            }else {
-                console.log("fail",request.responseText);
-            }
-        }
-        request.send(data);
+        var formData  = new FormData();
+        formData.append("policy", AWSData.content.p);
+        formData.append("signature", AWSData.content.s);
+        formData.append("acl", "public-read");
+        formData.append("AWSAccessKeyId", "AKIAJ2PO4SJFYQINQMIQ");
+        formData.append("key", "Test.jpeg");
+        formData.append("Content-Type", "image/jpeg");
+        formData.append("file", this.state.image);
+        fetch("https://parentlane.s3.amazonaws.com/", {
+            method: "POST",
+            body: formData
+        }).then((responseJson) => {
+            this.setState({
+                AWSImageUrl: responseJson.url+"Test.jpeg",
+                isImageLoaded: true,
+            })
+            console.log("response in aws reply is:",responseJson);
+            return responseJson;
+        }).catch((error) => {
+            console.error(error);
+        });
     }
 
     sendData() {
         const dateOfBirth = this.state.date+"-"+this.state.month+"-"+this.state.year;
         console.log(dateOfBirth);
-        fetch("http://qa.parentlane.com:8080/api/children", {
+        fetch(baseUrl+"/children", {
             method: "POST",
             credentials: "include",
             headers: {
@@ -220,6 +137,7 @@ export default class AddChildren extends React.Component {
                 gender: this.state.gender,
                 relation: 'parent',
                 vc: 29,
+                pic_url: this.state.AWSImageUrl,
             }),
         }).then((response) => response.json())
             .then((responseJson) => {
@@ -232,49 +150,38 @@ export default class AddChildren extends React.Component {
                 else {
                     AsyncStorageNative.setItem("myKey", JSON.stringify(responseJson));
                 }
+                this.props.history.push({pathname: "/HomeScreen"})
                 return responseJson;
             })
             .catch((error) => {
                 console.error(error);
             });
-        const { navigate } = this.props.navigation;
-        navigate('HomeScreen');
     }
 
+    fileSelectedHandler = event => {
+        this.AddImage(event);
+        console.log("image file is:", event.target.files[0]);
+    }
 
     render() {
-        this.dataURItoBlob(this.state.uri);
-        console.log("the file is:", this.state.file);
         return (
           <View style={{alignItems: "center", justifyContent: "center", marginTop: 20}}>
               <Text style={{fontSize: 27, textAlign: "center"}}>
                   Create your child's growth & <br/> development account
               </Text>
-              {/*{Platform.OS === 'web' ?
-                  <View style={{marginTop: 20}}>
-                      {this.state.uri ?
-                          <View>
-                            <Image source={{uri: this.state.uri}} style={style.image}/>
-                            {this.dataURItoBlob(this.state.uri)}
+              <TouchableOpacity>
+                  <View style={{borderRadius: 100, width: 150, height: 150, borderWidth: 1, borderColor: "black"}}>
+                      {this.state.AWSImageUrl && this.state.isImageLoaded ?
+                          <View style={{borderRadius: 100, width: 150, height: 150, borderWidth: 1, borderColor: "black"}}>
+                              <ImageWeb defaultSource={{uri: this.state.AWSImageUrl}} style={{width: 150, height: 150, borderRadius: 100}}/>
                           </View>
                           :
-                          <ImagePicker onComplete={this._handleImage} onFail={this._handleFail}>
-                              <View style={{borderWidth: 1, borderRadius: 100, borderColor: "black", padding: 20}}>
-                                <Text style={{color: "black"}}>Select{'\n'}Image</Text>
-                              </View>
-                          </ImagePicker>
+                          <View style={{top: 30}}>
+                            <input type="file" onChange={this.fileSelectedHandler}/>
+                          </View>
                       }
                   </View>
-                  :
-                  <View style={{marginTop: 20}}>
-                      {this.state.uri ?
-                          <Image source={{uri: this.state.uri}} style={style.image}/> :
-                          <ImagePicker onComplete={this._handleImage} onFail={this._handleFail} style={{borderWidth: 1, borderRadius: 100, borderColor: "black", padding: 20}}>
-                              <Text style={{color: "black", textAlign: "center"}}>Select{'\n'}Image</Text>
-                          </ImagePicker>
-                      }
-                  </View>
-              }*/}
+              </TouchableOpacity>
               <View style={{flexDirection: "row", justifyContent: "flex-end", marginTop: 15}}>
                   {this.state.isBoy ?
                       <View>
@@ -389,7 +296,7 @@ export default class AddChildren extends React.Component {
                   </View>
                   <Text style={{fontSize: 10, color: "#CDCECD"}}>Enter the correct date to personalise the app for your child</Text>
               </View>
-              <TouchableOpacity onPress={()=>this.AddChild()} style={{paddingLeft:4, paddingRight: 4, alignItems: "center", justifyContent: "center", marginTop: 30}}>
+              <TouchableOpacity onPress={()=>this.sendData()} style={{paddingLeft:4, paddingRight: 4, alignItems: "center", justifyContent: "center", marginTop: 30}}>
                   {/* <Text style={{color: "white", fontSize: 25}}>></Text> // same here, I thought Image isn't working but can be downloaded from 'react-native-web' */}
                   {Platform.OS === 'web' ?
                       <ImageWeb defaultSource={require("../next_pink.png")} style={{width: 60, height: 60}}/> :

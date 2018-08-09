@@ -15,29 +15,25 @@ export default class ResponseScreen extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state
         this.state = {
-            data: params.data,
-            childId: params.childId,
-            uiData: params.uiData,
-            color: params.color,
-            image: params.image,
+            data: props.location.state.data,
+            childId: props.location.state.childId,
+            uiData: props.location.state.uiData,
+            color: props.location.state.color,
+            image: props.location.state.image,
         }
     }
 
     viewResponses() {
-        const { navigate } = this.props.navigation;
-        navigate("Review",{data: this.state.data, uiData: this.state.uiData, childId: this.state.childId, color: this.state.color, image: this.state.image})
+        this.props.history.push({pathname: "/growth_check/ota/child/review_responses", state: {data: this.state.data, uiData: this.state.uiData, childId: this.state.childId, color: this.state.color, image: this.state.image}})
     }
 
     openNextCategory() {
-        const { navigate } = this.props.navigation;
         if(this.state.uiData.sc_response.next_category.action.text === "Completed") {
-            navigate("ViewReport", {childId: this.state.childId});
+            this.props.history.push({pathname: "/growth_check/ota/child/report", state: {childId: this.state.childId}})
         }
         else {
-            navigate("NextCategory", {childId: this.state.childId, data: this.state.uiData.sc_response.next_category.id, question_count: 5, pending_question_count: 5
-            });
+            this.props.history.push({pathname: "/growth_check/ota/next_category/questions", state: {childId: this.state.childId, data: this.state.uiData.sc_response.next_category.id, question_count: 5, pending_question_count: 5}})
         }
     }
 

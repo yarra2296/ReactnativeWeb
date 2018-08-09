@@ -19,10 +19,9 @@ export default class EnterDetailsOTA extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state;
         this.state = {
-            data: params.data,
-            childId: params.childId,
+            data: props.location.state.data,
+            childId: props.location.state.childId,
             height: null,
             weight: null,
         }
@@ -30,8 +29,7 @@ export default class EnterDetailsOTA extends React.Component {
 
     openMainPage() {
         if(this.state.height !== null && this.state.weight !== null) {
-            const {params} = this.props.navigation.state;
-            fetch(baseUrl+"/children/"+params.childId+"/info", {
+            fetch(baseUrl+"/children/"+this.state.childId+"/info", {
                 credentials: "include",
                 method: "POST",
                 headers: {
@@ -43,8 +41,7 @@ export default class EnterDetailsOTA extends React.Component {
             }).then((response) => response.json())
                 .then((responseJson) => {
                     console.log("reponse in EnterDetailsOTA Updation is:", responseJson)
-                    const {navigate} = this.props.navigation;
-                    navigate('Profile', {data: this.props.navigation.state.data, childId: params.childId})
+                    this.props.history.push({pathname: "/growth_check/ota/start", state: {data: this.state.data, childId: this.state.childId}})
                     return responseJson;
                 })
                 .catch((error) => {
@@ -54,9 +51,7 @@ export default class EnterDetailsOTA extends React.Component {
     }
 
     openMainPageWithoutDetailsUpload() {
-        const {navigate} = this.props.navigation;
-        const {params} = this.props.navigation.state;
-        navigate('Profile', {data: this.props.navigation.state.data, childId: params.childId})
+        this.props.history.push({pathname: "/growth_check/ota/start", state: {data: this.state.data, childId: this.state.childId}})
     }
 
     render() {

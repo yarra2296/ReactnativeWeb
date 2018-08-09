@@ -15,6 +15,8 @@ import {
 } from 'react-native-web';
 import {baseUrl, vc} from "../constants/constant";
 
+import {Link} from 'react-router-dom';
+
 const {width, height} = Dimensions.get('window');
 
 
@@ -22,12 +24,12 @@ export default class CheckOut extends React.Component {
 
     constructor(props) {
         super(props);
-        const {params} = this.props.navigation.state
+        console.log("The values of props in constructor is:",props.location.state.cacheData, props.location.state.plansData )
         this.state = {
-            content: params.cacheData,
-            plansData: params.plansData,
-            childId: [params.cacheData.user.children[0].id],
-            selectSubPlan: params.plansData.gc_plan_list[0].sub_plans[0],
+            content: props.location.state.cacheData,
+            plansData: props.location.state.plansData,
+            childId: [props.location.state.cacheData.user.children[0].id],
+            selectSubPlan: props.location.state.plansData.gc_plan_list[0].sub_plans[0],
             isSelectedSubPlan: false,
             fakeState: false,
             isSelectedFirstPlan: true,
@@ -37,8 +39,9 @@ export default class CheckOut extends React.Component {
             responseData: null,
             isShowPromoResponse: false,
             isWrongPromoCode: false,
-            selectedAmount: params.plansData.gc_plan_list[0].sub_plans[0].title,
+            selectedAmount: props.location.state.plansData.gc_plan_list[0].sub_plans[0].title,
             paymentAPIResponse: null,
+            total_amount: null,
         }
     }
 
@@ -266,8 +269,12 @@ export default class CheckOut extends React.Component {
                     this.setState({
                         paymentAPIResponse: responseJson,
                     })
-                    const { navigate } = this.props.navigation;
-                    navigate("Payment",{data: responseJson.content, total_amount: ((this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price) * this.state.childId.length)})
+                    this.setState({
+                        total_amount: ((this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price) * this.state.childId.length)
+                    })
+                    /*const { navigate } = this.props.navigation;
+                    navigate("Payment",{data: responseJson.content, total_amount: ((this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price) * this.state.childId.length)})*/
+                    this.props.history.push({pathname: "/payment_options",state: {data: responseJson.content, total_amount: ((this.state.selectSubPlan.price-this.state.selectSubPlan.discount_price) * this.state.childId.length)}})
                 }
                 else {
                     console.log("payment is not accepted");
@@ -287,9 +294,10 @@ export default class CheckOut extends React.Component {
     }
 
     render() {
-        const {params} = this.props.navigation.state;
         var price = (this.state.selectSubPlan.price - this.state.selectSubPlan.discount_price);
         const PayPrice = this.state.childId.length * this.state.selectSubPlan.title;
+        const pay = "Pay Rs. "
+        const amount = pay + this.state.total_amount;
         console.log("values of data's in checkout page:", this.state.selectSubPlan, this.state.content, this.state.plansData, this.state.plansData.gc_plan_list[0].sub_plans[0].id)
         return(
             <View>
@@ -511,54 +519,68 @@ export default class CheckOut extends React.Component {
                             </View>
                         }
                     </View>
-                    <View style={{marginTop: 70}}>
+                    <View style={{marginTop: 30}}>
                         {this.state.responseData && ((price * this.state.childId.length) - this.state.responseData.content.amount === 0) ?
-                            <TouchableOpacity onPress={() => this.HomePage()}
-                                              style={{backgroundColor: "#FE017E", width: 350, borderRadius: 5}}>
+                            <View>
                                 {this.state.responseData && this.state.responseData.content.amount && (this.state.selectedAmount === this.state.selectSubPlan.title) ?
-                                    <Text style={{
-                                        fontWeight: "bold",
-                                        color: "#FFFFFF",
-                                        paddingTop: 10,
-                                        paddingBottom: 10,
-                                        textAlign: "center"
-                                    }}>
-                                        Start GrowthCheck Smart
-                                    </Text> :
-                                    <Text style={{
-                                        fontWeight: "bold",
-                                        color: "#FFFFFF",
-                                        paddingTop: 10,
-                                        paddingBottom: 10,
-                                        textAlign: "center"
-                                    }}>
-                                        Pay Rs. {price * this.state.childId.length}
-                                    </Text>
+                                    <Link to={{ pathname: '/' }} style={{fontWeight: "bold",
+                                    color: "#FFFFFF",
+                                    paddingTop: 10,
+                                    paddingBottom: 10,
+                                    textAlign: "center"}}>Start GrowthCheck Smart</Link>
+                                   :
+                                    /*<TouchableOpacity onPress={() => this.paymentPage()}
+                                                      style={{backgroundColor: "#FE017E", width: 350, borderRadius: 5}}>
+                                        <Text style={{
+                                            fontWeight: "bold",
+                                            color: "#FFFFFF",
+                                            paddingTop: 10,
+                                            paddingBottom: 10,
+                                            textAlign: "center"
+                                        }}>
+                                            Pay Rs. {price * this.state.childId.length}
+                                        </Text>
+                                    </TouchableOpacity>*/
+                                    <form id="form1" method="post" action="https://qa.parentlane.com/paytm/pgRedirect.php">
+                                    <input type="hidden" title='MID' name='MID' value="Discov61765861314682"/>
+                                    <input type="hidden" title='ORDER_ID' name='ORDER_ID' value={this.state.data.paytm_params.ORDER_ID}/>
+                                    <input type="hidden" title='CUST_ID' name='CUST_ID' value={this.state.data.paytm_params.CUST_ID}/>
+                                    <input type="hidden" title='TXN_AMOUNT' name='TXN_AMOUNT' value={this.state.data.paytm_params.TXN_AMOUNT}/>
+                                    <input type="hidden" title='WEBSITE' name='WEBSITE' value={this.state.data.paytm_params.WEBSITE}/>
+                                    <input type="hidden" title='CALLBACK_URL' name='CALLBACK_URL' value={this.state.data.paytm_params.CALLBACK_URL}/>
+                                    <input type="hidden" title='CHANNEL_ID' name='CHANNEL_ID' value="WEB"/>
+                                    <input type="hidden" title='CHECKSUMHASH' name='CHECKSUMHASH' value={this.state.data.paytm_params.CHECKSUMHASH}/>
+                                    <input type="hidden" title='INDUSTRY_TYPE_ID' name='INDUSTRY_TYPE_ID' value={this.state.data.paytm_params.INDUSTRY_TYPE_ID}/>
+                                    <input value={amount} type="submit" id ="user-submit" style={{borderRadius: 10, width: 200, padding: 20, backgroundColor: "#FE017E", color: "white"}}/>
+                                    </form>
                                 }
-                            </TouchableOpacity> :
-                            <TouchableOpacity onPress={() => this.paymentPage()}
-                                              style={{backgroundColor: "#FE017E", width: 350, borderRadius: 5}}>
-                                {this.state.responseData && this.state.responseData.content.amount && (this.state.selectedAmount === this.state.selectSubPlan.title) ?
-                                    <Text style={{
-                                        fontWeight: "bold",
-                                        color: "#FFFFFF",
-                                        paddingTop: 10,
-                                        paddingBottom: 10,
-                                        textAlign: "center"
-                                    }}>
-                                        Pay Rs. {(price * this.state.childId.length) - this.state.responseData.content.amount}
-                                    </Text> :
-                                    <Text style={{
-                                        fontWeight: "bold",
-                                        color: "#FFFFFF",
-                                        paddingTop: 10,
-                                        paddingBottom: 10,
-                                        textAlign: "center"
-                                    }}>
-                                        Pay Rs. {price * this.state.childId.length}
-                                    </Text>
-                                }
-                            </TouchableOpacity>
+                            </View>
+                            :
+                            <View>
+                                <TouchableOpacity onPress={() => this.paymentPage()}
+                                                  style={{backgroundColor: "#FE017E", width: 350, borderRadius: 5}}>
+                                    {this.state.responseData && this.state.responseData.content.amount && (this.state.selectedAmount === this.state.selectSubPlan.title) ?
+                                        <Text style={{
+                                            fontWeight: "bold",
+                                            color: "#FFFFFF",
+                                            paddingTop: 10,
+                                            paddingBottom: 10,
+                                            textAlign: "center"
+                                        }}>
+                                            Pay Rs. {(price * this.state.childId.length) - this.state.responseData.content.amount}
+                                        </Text> :
+                                        <Text style={{
+                                            fontWeight: "bold",
+                                            color: "#FFFFFF",
+                                            paddingTop: 10,
+                                            paddingBottom: 10,
+                                            textAlign: "center"
+                                        }}>
+                                            Pay Rs. {price * this.state.childId.length}
+                                        </Text>
+                                    }
+                                </TouchableOpacity>
+                            </View>
                         }
                     </View>
                 </View>

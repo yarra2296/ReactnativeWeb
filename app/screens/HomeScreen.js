@@ -9,35 +9,14 @@ import {
     Image
 } from 'react-native';
 import {
-    AsyncStorage
+    AsyncStorage,
+    Image as ImageWeb
 } from 'react-native-web';
 import {baseUrl, vc} from "../constants/constant";
 
+import { Route, Link } from 'react-router-dom';
+
 const {width, height} = Dimensions.get('window')
-
-const style = {
-    container: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    image: {
-        width: 120,
-        height: 120,
-        marginTop: 25,
-        borderRadius: 100,
-        borderWidth: 1,
-        borderColor: "white",
-        left: 8
-    }
-};
-
-/*const htmlContent = `
-    <h1>This HTML snippet is now rendered with native components !</h1>
-    <h2>Enjoy a webview-free and blazing fast application</h2>
-    <img src="https://i.imgur.com/dHLmxfO.jpg?2" />
-    <em style="textAlign: center;">Look at how happy this native cat is</em>
-`;*/
 
 export default class HomeScreen extends React.Component {
 
@@ -52,7 +31,8 @@ export default class HomeScreen extends React.Component {
         file: null,
         file_type: null,
         isImageLoaded: false,
-
+        image: null,
+        AWSImageUrl: null,
     }
   }
 
@@ -131,20 +111,27 @@ export default class HomeScreen extends React.Component {
           });
   }
 
-    _handleImage = ({ uri }) => {
+  openOTA() {
+      const { navigate } = this.props.navigation;
+      navigate("OTA");
+  }
+
+  openFree() {
+      this.fetchData();
+      if(this.state.data && this.state.data.score > 0) {
+          const { navigate } = this.props.navigation;
+          navigate('Profile',{childId: this.state.childId});
+      }
+      else {
+          const {navigate} = this.props.navigation;
+          navigate("OTAQuestions");
+      }
+  }
+
+    AddImage(event) {
         this.setState({
-            uri: uri,
-            isImageUploaded: true,
-        });
-        this.AddImage;
-        this.dataURItoBlob(this.state.uri);
-    };
-
-    _handleFail = ({ error }) => {
-        console.log(error);
-    };
-
-    AddImage() {
+            image: event.target.files[0],
+        })
         fetch(baseUrl+"/get-aws-upload-signature?mimetype=image/jpeg", {
             method: "POST",
             credentials: "include",
@@ -162,163 +149,68 @@ export default class HomeScreen extends React.Component {
             });
     }
 
-    dataURItoBlob(uri) {
-        console.log("HI i am in conversion of the file:")
-        // convert base64/URLEncoded data component to raw binary data held in a string
-        var byteString;
-        if (uri.split(',')[0].indexOf('base64') >= 0)
-            byteString = atob(uri.split(',')[1]);
-        else
-            byteString = unescape(uri.split(',')[1]);
-
-        // separate out the mime component
-        var mimeString = uri.split(',')[0].split(':')[1].split(';')[0];
-
-        // write the bytes of the string to a typed array
-        var ab = new ArrayBuffer(byteString.length);
-        var ia = new Uint8Array(byteString.length);
-        for (var i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-        this.setState({
-            file: ab,
-            file_type: mimeString,
-        })
-    }
-
-    /*getDataUri(url, callback) {
-        var image = new Image();
-
-        image.onload = function () {
-            var canvas = document.createElement('canvas');
-            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-
-            canvas.getContext('2d').drawImage(this, 0, 0);
-
-            // Get raw image data
-            callback(canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''));
-
-            // ... or get as Data URI
-            callback(canvas.toDataURL('image/png'));
-        };
-
-        image.src = url;
-    }
-
-// Usage
-    getDataUri('/logo.png', function(dataUri) {
-        // Do whatever you'd like with the Data URI!
-    });*/
-
     getparams(AWSData) {
-        /*const file = {
-            // `uri` can also be a file system path (i.e. file://)
-            uri: this.state.file,
-            name: "image.jpeg",
-            type: "image/jpeg"
-        }
-
-        const options = {
-            accessKey: "AKIAJ2PO4SJFYQINQMIQ",
-            policy: AWSData.content.p,
-            signature: AWSData.content.s,
-            acl: "public-read",
-            uri: this.state.file,
-            bucket: "parentlane",
-            region: "india",
-        }
-
-        RNS3.put(file, options).then(response => {
-            if (response.status !== 201)
-                throw new Error("Failed to upload image to S3");
-            console.log(response.body);
-        })*/
-        console.log("file is while uploading:", this.state.file)
-        var data = new FormData();
-        var uri=this.state.file;
-        var type="image/jpeg";
-        var imageName="Test.jpeg";
-        data.append("policy",AWSData.content.p);
-        data.append("signature",AWSData.content.s);
-        data.append("acl","public-read");
-        data.append("AWSAccessKeyId","AKIAJ2PO4SJFYQINQMIQ");
-        data.append("key","Test.jpeg");
-        data.append("Content-Type",type)
-        data.append("file", uri);
-        data.append("success_action_status", 200);
-
-        var request=new XMLHttpRequest();
-        // request.setRequestHeader('content-Type', 'multipart/form-data')
-        request.open('POST',"https://parentlane.s3.amazonaws.com/",true);
-        request.onreadystatechange = function(status){
-            if(request.readyState !== 4){
-                return;
-            }
-            console.log("status after uploading the Image File:", request.status)
-            if(request.status === 200){
-                console.log("success",request.responseText);
-            }else {
-                console.log("fail",request.responseText);
-            }
-        }
-        request.send(data);
+        var formData  = new FormData();
+        formData.append("policy", AWSData.content.p);
+        formData.append("signature", AWSData.content.s);
+        formData.append("acl", "public-read");
+        formData.append("AWSAccessKeyId", "AKIAJ2PO4SJFYQINQMIQ");
+        formData.append("key", "Test.jpeg");
+        formData.append("Content-Type", "image/jpeg");
+        formData.append("file", this.state.image);
+        fetch("https://parentlane.s3.amazonaws.com/", {
+            method: "POST",
+            body: formData
+        }).then((responseJson) => {
+            this.setState({
+                AWSImageUrl: responseJson.url+"Test.jpeg",
+                isImageLoaded: true,
+            })
+            console.log("response in aws reply is:",responseJson);
+            return responseJson;
+        }).catch((error) => {
+            console.error(error);
+        });
     }
 
+    fileSelectedHandler = event => {
+        this.AddImage(event);
+        console.log("image file is:", event.target.files[0]);
+    }
 
-  openOTA() {
-      const { navigate } = this.props.navigation;
-      navigate("OTA");
-  }
-
-  openFree() {
-      if(this.state.data.score > 0) {
-          const { navigate } = this.props.navigation;
-          navigate('Profile',{childId: this.state.childId});
-      }
-      else {
-          const {navigate} = this.props.navigation;
-          navigate("OTAQuestions");
-      }
-  }
-
-  render() {
+    render() {
     return (
-        <View style={{backgroundColor: "#1CBCB4", alignItems: "center", justifyContent: "center"}}>
-            <Text style={{color: "white", padding: 20, fontSize: 60}}>Thank you</Text>
-            {/*{Platform.OS === 'web' ?
-                <View style={{marginTop: 20}}>
-                    <HTML html={htmlContent} imagesMaxWidth={Dimensions.get('window').width} />
-                    {this.state.uri ?
-                        <Image source={{uri: this.state.uri}} style={style.image}/>
+        <View style={{backgroundColor: "#1CBCB4", alignItems: "center", justifyContent: "center", height: height}}>
+            <Text style={{color: "white", fontSize: 50}}>Welcome Back</Text>
+            {/*<View>
+                <input type="file" onChange={this.fileSelectedHandler}/>
+            </View>*/}
+            {/*<TouchableOpacity>
+                <View style={{borderRadius: 100, width: 150, height: 150, borderWidth: 1, borderColor: "black"}}>
+                    {this.state.AWSImageUrl && this.state.isImageLoaded ?
+                        <View style={{borderRadius: 100, width: 150, height: 150, borderWidth: 1, borderColor: "black"}}>
+                            <ImageWeb defaultSource={{uri: this.state.AWSImageUrl}} style={{width: 150, height: 150, borderRadius: 100, borderColor: "white"}}/>
+                        </View>
                         :
-                        <ImagePicker onComplete={this._handleImage} onFail={this._handleFail}>
-                            <View style={{borderWidth: 1, borderRadius: 100, borderColor: "black", padding: 20}}>
-                                <Text style={{color: "black"}}>Select{'\n'}Image</Text>
-                            </View>
-                        </ImagePicker>
+                        <View style={{top: 65, left: 30, width: 30}}>
+                            <input display="{style: none}" type="file" onChange={this.fileSelectedHandler}/>
+                        </View>
                     }
                 </View>
-                :
-                <View style={{marginTop: 20}}>
-                    {this.state.uri ?
-                        <Image source={{uri: this.state.uri}} style={style.image}/> :
-                        <ImagePicker onComplete={this._handleImage} onFail={this._handleFail} style={{borderWidth: 1, borderRadius: 100, borderColor: "black", padding: 20}}>
-                            <Text style={{color: "black", textAlign: "center"}}>Select{'\n'}Image</Text>
-                        </ImagePicker>
-                    }
-                </View>
-            }*/}
-            {/*<TouchableOpacity onPress={()=>this.AddImage()}>
+            </TouchableOpacity>*/}
+            <Text style={{color: "grey", marginTop: 50, fontSize: 20}}>Please click any Button to start.</Text>
+            {/*<TouchableOpacity onPress={()=>this.openOTA()}>
                 <Text style={{marginTop: 10, color: "#FFFFFF", fontSize: 20, fontWeight: "bold", paddingLeft: 50, paddingRight: 50, backgroundColor: "#FE017E"}}>GROWTH CHECK PLANS</Text>
             </TouchableOpacity>*/}
-            <Text style={{color: "grey", marginTop: height/3.45, fontSize: 20}}>Please click any Button to start.</Text>
-            <TouchableOpacity onPress={()=>this.openOTA()}>
-                <Text style={{marginTop: 10, color: "#FFFFFF", fontSize: 20, fontWeight: "bold", paddingLeft: 50, paddingRight: 50, backgroundColor: "#FE017E"}}>GROWTH CHECK PLANS</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=>this.openFree()}>
+            <div style={{marginTop: 30, borderWidth: 1, borderColor: "black", backgroundColor: "#FE017E", padding: 20, borderRadius: 10, width: 250}}>
+                <Link to="/growth_check/plan_info" style={{borderWidth: 1, borderColor: "black", color: "#FFFFFF", fontSize: 20, fontWeight: "bold"}}>GROWTH CHECK PLANS</Link>
+            </div>
+            <div style={{marginTop: 30, borderWidth: 1, borderColor: "black", backgroundColor: "#FE017E", padding: 20, borderRadius: 10, width: 250}}>
+                <Link to="/growth_check/ota/welcome" hash={"hash"} style={{borderWidth: 1, borderColor: "black", color: "white", fontSize: 20, fontWeight: "bold", textAlign: "center", marginLeft: 73}}>START OTA</Link>
+            </div>
+            {/*<TouchableOpacity onPress={()=>this.openFree()}>
                 <Text style={{marginTop: 10, marginBottom: height/2.8, color: "#FFFFFF", fontSize: 20, fontWeight: "bold", paddingLeft: 145, paddingRight: 145, backgroundColor: "#FE017E"}}>OTA</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
         </View>
     );
   }

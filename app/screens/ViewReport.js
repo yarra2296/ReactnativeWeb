@@ -19,9 +19,8 @@ export default class ViewReport extends React.Component {
 
     constructor(props) {
         super(props);
-        const { params } = this.props.navigation.state;
         this.state = {
-            childId: params.childId,
+            childId: props.location.state.childId,
             data: null,
             isOpenLearningSkills: true,
             isOpenGrossMotor: false,
